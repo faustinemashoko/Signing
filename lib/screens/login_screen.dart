@@ -1,105 +1,93 @@
 import 'package:flutter/material.dart';
+import 'package:dart_mysql/services/authentication_service.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
-
   @override
-  // ignore: library_private_types_in_public_api
   _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  String email = '';
-  String password = '';
-  
-  // Dummy function for login logic
-  void login() {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _authService = AuthenticationService();
+
+  // Email validator
+  String? validateEmail(String? value) {
+    String pattern = r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$';
+    RegExp regex = RegExp(pattern);
+    if (value == null || value.isEmpty || !regex.hasMatch(value)) {
+      return 'Enter a valid email address';
+    } else {
+      return null;
+    }
+  }
+
+  // Password validator
+  String? validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Enter your password';
+    } else {
+      return null;
+    }
+  }
+
+  // On login press
+  void _login() async {
     if (_formKey.currentState!.validate()) {
-      // Here you can call your authentication service to log in
-      print('Email: $email');
-      print('Password: $password');
-      // After successful login, navigate to the dashboard or home screen
+      bool success = await _authService.authenticateUser(
+        _emailController.text,
+        _passwordController.text,
+      );
+      if (success) {
+        Navigator.pushReplacementNamed(context, '/main-screen');
+      } else {
+        // Show login failure message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Login failed! Check your credentials.')),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
+      appBar: AppBar(title: Text('Login')),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              // Email input field
+            children: [
               TextFormField(
-                decoration: const InputDecoration(labelText: 'Enter your Email'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  return null;
-                },
-                onChanged: (value) {
-                  setState(() {
-                    email = value;
-                  });
-                },
+                controller: _emailController,
+                decoration: InputDecoration(labelText: 'Email'),
+                validator: validateEmail,
               ),
-              
-              // Password input field
               TextFormField(
-                decoration: const  InputDecoration(labelText: 'Enter your Password'),
+                controller: _passwordController,
+                decoration: InputDecoration(labelText: 'Password'),
                 obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your password';
-                  }
-                  return null;
-                },
-                onChanged: (value) {
-                  setState(() {
-                    password = value;
-                  });
-                },
+                validator: validatePassword,
               ),
-              
-              const SizedBox(height: 20),
-              
+              SizedBox(height: 20),
               ElevatedButton(
-                onPressed: login,
-                child: const Text('Login'),
+                onPressed: _login,
+                child: Text('Login'),
               ),
-              
-              const SizedBox(height: 10),
-              
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pushNamed(context, '/register'); // Register route
-                    },
-                    child: const Text(
-                      'Register',
-                      style: TextStyle(color: Color.fromARGB(255, 0, 20, 199), 
-                      fontSize: 22),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pushNamed(context, '/reset-password'); // Reset Password route
-                    },
-                    child: const Text(
-                      'Forgot Password?',
-                      style: TextStyle(color: Colors.blue),
-                    ),
-                  ),
-                ],
+              SizedBox(height: 10),
+              TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/register');
+                },
+                child: Text('Don’t have an account? Sign up'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/reset-password');
+                },
+                child: Text('Forgot Password? Reset here'),
               ),
             ],
           ),

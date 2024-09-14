@@ -7,90 +7,98 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
-  String email = '';
-  String password = '';
-  String confirmPassword = '';
-
-  void register() {
-    if (_formKey.currentState!.validate()) {
-      // Add your registration logic here
-      print('Registering user with email: $email');
-      // After successful registration, navigate to the login screen or dashboard
-    }
-  }
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Register')),
+      appBar: AppBar(
+        title: Text('Register'),
+      ),
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: ListView(
             children: <Widget>[
-              // Email input field
+              // Email field
               TextFormField(
+                controller: _emailController,
                 decoration: InputDecoration(labelText: 'Email'),
+                keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your email';
                   }
+                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                    return 'Please enter a valid email';
+                  }
                   return null;
                 },
-                onChanged: (value) {
-                  setState(() {
-                    email = value;
-                  });
-                },
               ),
+              SizedBox(height: 16.0),
 
-              // Password input field
+              // Password field
               TextFormField(
+                controller: _passwordController,
                 decoration: InputDecoration(labelText: 'Password'),
                 obscureText: true,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your password';
                   }
+                  if (value.length < 6) {
+                    return 'Password must be at least 6 characters long';
+                  }
                   return null;
                 },
-                onChanged: (value) {
-                  setState(() {
-                    password = value;
-                  });
-                },
               ),
+              SizedBox(height: 16.0),
 
-              // Confirm password input field
+              // Confirm Password field
               TextFormField(
+                controller: _confirmPasswordController,
                 decoration: InputDecoration(labelText: 'Confirm Password'),
                 obscureText: true,
                 validator: (value) {
-                  if (value != password) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please confirm your password';
+                  }
+                  if (value != _passwordController.text) {
                     return 'Passwords do not match';
                   }
                   return null;
                 },
-                onChanged: (value) {
-                  setState(() {
-                    confirmPassword = value;
-                  });
-                },
               ),
+              SizedBox(height: 32.0),
 
-              SizedBox(height: 20),
-
-              // Register button
+              // Submit button
               ElevatedButton(
-                onPressed: register,
-                child: Text('Register'),
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    // Form is valid, proceed with sign-up logic
+                    // You can integrate with your authentication backend here
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Signing up...')),
+                    );
+                  }
+                },
+                child: Text('Sign Up'),
               ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
   }
 }

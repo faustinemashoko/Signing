@@ -17,25 +17,27 @@ class AuthenticationService {
     return false;
   }
 
-  Future<bool> register(String firstName, String lastName, String username, String password) async {
-    var conn = await dbConnection.dbConnect();
-    var hashedPassword = password.hashCode.toString();
-    var result = await conn.query(
-      'INSERT INTO users (f_name, l_name, username, password) VALUES (?, ?, ?, ?)',
-      [firstName, lastName, username, hashedPassword],
-    );
-    await conn.close();
-    return result.affectedRows == 1;
-  }
+  Future<bool> authenticateUser(String email, String password) async {
+    var conn = await DBConnection().dbConnect();
 
-  Future<bool> resetPassword(String username, String newPassword) async {
-    var conn = await dbConnection.dbConnect();
-    var hashedPassword = newPassword.hashCode.toString();
-    var result = await conn.query(
-      'UPDATE users SET password = ? WHERE username = ?',
-      [hashedPassword, username],
+    var results = await conn.query(
+      'SELECT password FROM users WHERE email = ?',
+      [email],
     );
-    await conn.close();
-    return result.affectedRows == 1;
+
+    if (results.isEmpty) {
+      print('No user found with that email');
+      return false;
+    }
+
+    var storedPassword = results.first['password'];
+
+    if (storedPassword == password) {
+      print('Login successful');
+      return true;
+    } else {
+      print('Invalid password');
+      return false;
+    }
   }
 }
